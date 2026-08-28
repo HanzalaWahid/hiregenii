@@ -257,7 +257,7 @@ def _build_ats_response(ats_payload: Dict[str, Any]) -> ATSScoreResponse:
 
     # Partition explanations into strengths and improvements
     strengths = [
-        e for +e in detailed
+        e for e in detailed
         if not (
             e.startswith("Missing")
             or e.startswith("No ")
