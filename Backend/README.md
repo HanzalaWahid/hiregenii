@@ -1,61 +1,74 @@
-# AI Resume Analyzer Backend – V1
+# FastAPI backend
 
-This backend provides the V1 runtime for the AI Resume Analyzer. It accepts uploaded resumes, validates them, extracts structured content through a selected parser provider, normalizes skills, scores ATS-readiness, and returns recommendations to the UI.
+The backend exposes the resume analysis API used by the React frontend. Its analysis pipeline validates an uploaded document, extracts text, selects a parser, normalizes skills, calculates a rule-based ATS score, and produces keyword-based recommendations.
 
-## V1 Scope
-The current V1 release is intentionally focused on a credible, maintainable MVP:
-- upload and validation for PDF and DOCX files
-- text extraction from the uploaded document
-- one selected extractor per analysis run
-- skill normalization through the knowledge layer
-- ATS-style scoring and recommendation generation
-- FastAPI response shaping for the frontend
+## Requirements and setup
 
-## Runtime Architecture
-The active V1 flow is:
-1. receive an uploaded resume
-2. validate the file
-3. extract raw text
-4. run the selected extractor (custom rule-based parser by default, Gemini when explicitly selected)
-5. normalize and enrich the parsed data
-6. run ATS scoring and recommendation generation
-7. return the analysis payload
+From the repository root:
 
-## Core Modules
-- app/api.py: FastAPI routes and response mapping
-- app/services/analysis_service.py: orchestration of the runtime pipeline
-- app/parser/custom_parser.py: default local extractor
-- app/parser/llm_extractor.py: optional Gemini extractor
-- app/parser/text_extraction.py: raw text extraction from PDF and DOCX
-- app/validation/validator.py: file validation and safety checks
-- app/knowledge/repository.py: skill normalization and unknown-skill logging
-- app/ats/engine.py: ATS scoring
-- app/recommendation/engine.py: recommendation generation
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+```
 
-## Environment Variables
-The backend reads configuration from environment variables and a local .env file.
+Start the development server from the `backend/` directory:
 
-Common settings:
-- EXTRACTOR_PROVIDER=auto or custom_rule or gemini
-- GEMINI_API_KEY=your key when Gemini is selected
-- MAX_UPLOAD_SIZE_MB=5.0
-
-## Local Setup
-```bash
-cd Backend
-pip install -r requirements.txt
+```powershell
 python main.py
 ```
 
-The API will be available at http://localhost:8000/docs.
+The server listens on port `8000`. Interactive API documentation is available at `http://localhost:8000/docs`.
 
-## Notes on V1
-- Ollama is not part of the active V1 runtime path.
-- V1 uses one selected extractor per run rather than a multi-provider orchestration flow.
-- ATS and recommendations consume the normalized results produced by the selected extractor.
+## Configuration
 
-## Known Limitations
-- OCR for scanned resumes is not part of V1.
-- The runtime remains single-provider per run.
-- The knowledge layer is currently focused on skill normalization and unknown-skill tracking.
+The backend reads these variables from the process environment or a `.env` file:
 
+| Variable | Default | Purpose |
+|---|---|---|
+| `GEMINI_API_KEY` | unset | API key used by the optional Gemini extractor. |
+| `CEREBRAS_API_KEY` | unset | API key used by the optional Cerebras extractor. |
+| `CEREBRAS_MODEL` | `qwen-3.8-27b` | Model ID sent to Cerebras shared inference. |
+| `EXTRACTOR_PROVIDER` | `auto` | Service default when a provider is not passed. `auto` selects the local parser; it does not perform fallback. |
+| `MAX_UPLOAD_SIZE_MB` | `5.0` | Maximum size checked by resume validation. |
+
+Configuration checks for `backend/.env` first, then the repository-root `.env`. Use the root [.env.example](../.env.example) as a variable-name reference; do not put real credentials in documentation or commit them.
+
+The Gemini extractor imports `google.generativeai`, but that SDK is not listed in [requirements.txt](requirements.txt). Gemini operation therefore is not reproducible from the backend manifest alone.
+
+Cerebras uses the `requests` dependency already listed in [requirements.txt](requirements.txt) and calls the Cerebras chat-completions API. The default model is `qwen-3.8-27b`; set `CEREBRAS_MODEL` to a currently supported model ID if you want to use another model.
+
+## Implemented modules
+
+- `app/api.py`: FastAPI application, response schemas, and routes.
+- `app/services/analysis_service.py`: parser selection, enrichment, skill normalization, scoring, and recommendations.
+- `app/parser/custom_parser.py`: default local rule-based parser with optional spaCy assistance.
+- `app/parser/llm_extractor.py`: explicitly selected Gemini extractor.
+- `app/parser/cerebras_extractor.py`: explicitly selected Cerebras extractor.
+- `app/parser/text_extraction.py`: PDF and DOCX text extraction.
+- `app/validation/validator.py`: extension, size, signature, integrity, and text checks.
+- `app/knowledge/repository.py`: in-memory skill aliases and local unknown-skill count file.
+- `app/ats/engine.py`: explainable rule-based ATS scoring.
+- `app/recommendation/engine.py`: keyword-based field, skill, and course recommendations.
+
+## API routes
+
+- `GET /` and `GET /health`
+- `POST /api/analyze`
+- `GET /api/knowledge/skills`
+- `POST /api/knowledge/skills`
+- `DELETE /api/knowledge/skills/{raw_term}`
+- `POST /api/job-match`
+
+Request and response schemas are defined in `app/api.py`; the running API's OpenAPI documentation is at `/docs`.
+
+## Runtime and data limitations
+
+- The analyze route defaults to provider `auto`, which selects the local rule-based parser. The frontend currently sends `custom_rule` by default.
+- Cerebras can be selected in the upload screen; it requires `CEREBRAS_API_KEY`. Resume text is sent to Cerebras when selected.
+- There is no automatic parser/provider fallback. Gemini initialization failure does not switch to the local parser.
+- Skill alias changes are held in process memory and are lost when the service restarts.
+- Unknown skills are counted in `app/knowledge/unknown_skills.json`.
+- Uploaded resumes are temporarily written for analysis and removed by the request handler.
+- No database, authentication, OCR, or durable analysis history is implemented.
+
+For the complete local workflow and known issues, see the [runbook](../docs/RUNBOOK.md).

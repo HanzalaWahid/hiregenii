@@ -1,52 +1,58 @@
-# Runbook
+# Development runbook
 
-## Install Dependencies
-```bash
-cd Backend
-pip install -r requirements.txt
-```
+## Prerequisites
 
-## Configure Gemini
-Set a Gemini API key in your environment:
-```env
-GEMINI_API_KEY=your_key_here
-EXTRACTOR_PROVIDER=auto
-```
+- Python and pip
+- Node.js and npm
 
-## Run the Backend
-```bash
-cd Backend
+The repository does not specify minimum versions. The commands below are based on the checked-in backend and frontend manifests.
+
+## Configure the environment
+
+The backend reads `GEMINI_API_KEY`, `CEREBRAS_API_KEY`, `CEREBRAS_MODEL`, `EXTRACTOR_PROVIDER`, and `MAX_UPLOAD_SIZE_MB`. It checks `backend/.env` first, then the repository-root `.env`. The frontend optionally reads `VITE_API_URL`; its default API URL is `http://localhost:8000`.
+
+The root [.env.example](../.env.example) lists the supported backend variable names with empty key values. Copy it to a local `.env` and supply a key only for the external provider you explicitly select. Keep real credentials private.
+
+The API route defaults to provider `auto`, which selects the local parser. The upload screen also starts with the local parser selected. Neither setting enables automatic AI fallback.
+
+## Install and run the backend
+
+From the repository root:
+
+```powershell
+cd backend
+python -m pip install -r requirements.txt
 python main.py
 ```
 
-## Run the Frontend
-```bash
-cd "resume Analyzer frontend"
+The API listens on port `8000`. Open `http://localhost:8000/docs` for the interactive API reference.
+
+## Install and run the frontend
+
+In a second terminal at the repository root:
+
+```powershell
+cd frontend
 npm install
 npm run dev
 ```
 
-## Test Parsing on Sample Resumes
-Upload a sample PDF or DOCX through the UI or invoke the analysis endpoint directly.
+Open the URL printed by Vite (normally `http://localhost:5173`). The Vite development configuration proxies `/api` and `/health` to `http://localhost:8000`.
 
-## Debugging Failed Extraction
-Check:
-- whether the file is text-based or scanned
-- whether validation rejected the file
-- whether the selected parser returned empty or sparse fields
-- whether the selected provider is configured correctly
+## Available API operations
 
-## Debugging Gemini Failures
-If Gemini extraction fails, inspect:
-- whether GEMINI_API_KEY is configured
-- whether the package dependencies are available
-- whether the API returned malformed or empty output
+- `GET /` and `GET /health`
+- `POST /api/analyze` with a PDF or DOCX `file` and optional `provider` form field
+- `GET`, `POST`, and `DELETE /api/knowledge/skills` (DELETE uses `/{raw_term}`)
+- `POST /api/job-match` with a job description and skills list
 
-## Identifying Whether the Result Came from Local or Gemini
-The response includes provider metadata through the service result object. In the current V1 flow, a result is marked as the selected provider for that run.
+## Troubleshooting notes
 
-## Common Issues
-- Unsupported file type
-- Empty extracted text
-- Missing Gemini key
-- Very weak parser output on unusual resume formats
+- Only PDF and DOCX extensions are accepted. Scanned/image-only PDFs are rejected; OCR is not provided.
+- Check that the selected document is readable and contains extractable text.
+- Gemini selection requires `GEMINI_API_KEY` and the `google.generativeai` package. That package is not declared in `backend/requirements.txt`, and provider initialization failure does not trigger local-parser fallback.
+- Cerebras selection requires `CEREBRAS_API_KEY`; `CEREBRAS_MODEL` defaults to `qwen-3.8-27b`. Resume text is sent to Cerebras when this provider is selected.
+- Skill aliases added or deleted through the API exist only in process memory. Unknown-skill counts are written to `backend/app/knowledge/unknown_skills.json`.
+- Job matching uses token/substring overlap; it is not semantic matching.
+
+No automated test command is declared in the inspected project manifests. This runbook documents development setup, not test or production deployment readiness.

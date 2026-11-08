@@ -1,70 +1,37 @@
-# V1.5 / Phase 2 Roadmap
+# V1.5 / Phase 2 roadmap proposal
 
-## 1. Purpose of V1.5
-V1.5 is the next evolution step after the stable V1 MVP. It focuses on making the system more robust, more domain-general, and more suitable for real-world use.
+This document is a planning note. None of the items below should be read as implemented functionality. Current behavior is described in [V1_ARCHITECTURE.md](V1_ARCHITECTURE.md).
 
-## 2. Current V1 Limitations
-V1 is intentionally limited. It does not yet solve:
-- strong OCR for scanned PDFs
-- multi-provider routing and key rotation
-- sophisticated merge logic across providers
-- richer confidence models
-- production observability and operational resilience
+## Current V1 limitations
 
-## 3. Planned Improvements
-- stronger extraction confidence scoring
-- field-by-field merge between local parser and Gemini outputs
-- provider router abstraction with multiple provider backends
-- multiple free API keys with paid fallback
-- domain-specific knowledge growth
-- semantic matching for job descriptions and skill relevance
-- OCR for scanned resumes and image-heavy PDFs
-- partial analysis and graceful degradation
+- Scanned/image-only resumes are rejected; OCR is not implemented.
+- Provider selection includes the local rule-based parser and explicitly selected Gemini or Cerebras extraction.
+- There is no provider router, automatic fallback, or field-level merge.
+- The current confidence value is a heuristic score, not a calibrated model.
+- Skill aliases are held in process memory; unknown-skill counts use a local JSON file.
+- Analysis results are not stored in a database.
+- Production observability, retries, and background processing are not implemented.
 
-## 4. Proposed Architecture Changes
-V1.5 should introduce a provider orchestration service that can:
-1. run the local parser first
-2. evaluate extraction confidence
-3. route to one or more AI providers based on policy
-4. normalize all outputs into one canonical schema
-5. merge results intelligently
-6. continue with ATS and recommendation generation
+## Potential improvements
 
-## 5. Provider Routing Strategy
-A provider router should manage:
-- provider registration
-- per-provider credentials
-- rate-limit handling
-- fallback policy
-- cost tracking
-- latency tracking
-- failure retry policy
+The following are candidates for a future phase and require product and technical decisions before implementation:
 
-## 6. Knowledge-Learning System
-V1.5 can introduce a lightweight learning queue that stores:
-- unknown skills
-- alias corrections
-- field-classification feedback
-- model or parser improvement signals
+- Evaluate and improve extraction confidence.
+- Define provider routing and fallback policies, including error handling and operational limits.
+- Evaluate whether field-level merging between local and AI extraction would improve accuracy.
+- Add OCR for scanned or image-heavy documents.
+- Define durable, privacy-aware persistence for knowledge and analysis data.
+- Improve job matching beyond the current token/substring overlap.
+- Add structured logs, request tracing, metrics, and controlled retries.
+- Consider background processing if expected workloads require it.
 
-## 7. OCR / Scanned Resume Handling
-OCR support should be added through a dedicated extraction stage for scanned and image-only resumes.
+## Decisions required before implementation
 
-## 8. Graceful Failure & Partial Analysis
-The system should return partial results when one component fails rather than failing the whole analysis.
+- Which providers and supported SDK versions are in scope.
+- What resume data may be sent to external providers and what user consent is required.
+- How keys are managed, and what rate, cost, and retention controls apply.
+- Which extraction-quality thresholds should trigger routing or partial results.
+- What data needs persistence, retention, and deletion policies.
+- How changes will be measured against representative resumes and job descriptions.
 
-## 9. Production Hardening Tasks
-- structured logging
-- request tracing
-- metrics and alerts
-- retry policies
-- background job support
-- secure secret handling
-
-## 10. Suggested Implementation Order
-1. confidence model
-2. merge engine
-3. provider router
-4. key pool management
-5. OCR support
-6. observability and resilience
+No provider key pool, paid fallback, learning queue, OCR engine, or semantic matcher is currently implemented.

@@ -9,6 +9,7 @@ from ..ats.engine import RuleBasedATSScorer
 from ..config import get_extractor_provider, get_max_upload_size_mb
 from ..knowledge.repository import KnowledgeRepository
 from ..models import ATSResult, RecommendationResult, ResumeAnalysisResult, ResumeData
+from ..parser.cerebras_extractor import CerebrasExtractor
 from ..parser.custom_parser import CustomRuleBasedExtractor
 from ..parser.llm_extractor import GeminiExtractor
 from ..recommendation.engine import RuleBasedRecommendationEngine
@@ -57,6 +58,8 @@ class ResumeAnalysisService:
         provider = provider.lower()
         if provider == "gemini":
             return self._build_gemini_extractor()
+        if provider == "cerebras":
+            return CerebrasExtractor()
         return CustomRuleBasedExtractor()
 
     def _build_gemini_extractor(self) -> Any:
@@ -72,7 +75,7 @@ class ResumeAnalysisService:
         return validate_resume(resume_path, max_size)
 
     def analyze_resume(self, resume_path: Path) -> ResumeAnalysisResult:
-        provider_used = "gemini" if self.provider == "gemini" else "custom_rule"
+        provider_used = self.provider if self.provider in {"gemini", "cerebras"} else "custom_rule"
         fallback_used = False
         confidence_score = 0.0
 

@@ -1,145 +1,152 @@
-# AI Resume Analyzer – V1
+# AI Resume Analyzer
 
-AI Resume Analyzer is a backend-focused resume analysis MVP designed to help candidates and recruiters understand a resume’s structure, quality, and improvement potential. The V1 release focuses on a practical and maintainable architecture built around a selected extractor strategy, skill normalization, ATS-style scoring, and recommendations.
+AI Resume Analyzer is a React and FastAPI application that extracts information from PDF and DOCX resumes, calculates a rule-based ATS-style score, and provides keyword-based career and skill recommendations.
 
-## 1. Overview
-This project processes uploaded resumes in PDF or DOCX format, extracts structured information, normalizes skills, scores the resume for ATS-readiness, and returns recommendations. The V1 version is intentionally scoped to be credible, understandable, and maintainable rather than overly ambitious.
+## Current features
 
-## 2. V1 Scope
-The V1 release prioritizes:
-- reliable upload and validation
-- text extraction from PDF and DOCX
-- local rule-based parsing as the default path
-- optional Gemini extraction when explicitly selected
-- normalization of extracted skills through a knowledge layer
-- ATS-style scoring and career-field recommendations
-- developer-friendly documentation and a clean service-oriented structure
+- Upload and validate text-based PDF or DOCX resumes.
+- Extract resume text and structured fields using a local rule-based parser with optional spaCy assistance.
+- Optionally select the Gemini or Cerebras extractor.
+- Normalize skills using an in-process alias map and record unknown skills in a JSON file.
+- Return an explainable ATS score and heuristic career recommendations.
+- Compare a job description with supplied resume skills using keyword overlap.
+- View and modify skill aliases through the API.
 
-## 3. Key Features
-- PDF and DOCX support
-- Resume file validation and safety checks
-- Local rule-based extraction
-- Single-provider extraction per analysis run
-- Skill normalization and unknown-skill tracking
-- ATS-style scoring with explainable breakdown
-- Career-field and skill recommendation output
-- FastAPI backend with React frontend integration
+The application does not currently provide accounts, authentication, durable database storage, OCR, or automatic AI-provider fallback. See [Known limitations](#known-limitations).
 
-## 4. High-Level Architecture
+## Architecture
+
 ```text
-Resume Upload
-  -> File Validation
-  -> Text Extraction
-  -> Selected Extractor
-  -> Skill Normalization
-  -> ATS Scoring
-  -> Recommendation Engine
-  -> Analysis Result / UI
+React/Vite frontend
+  -> FastAPI API
+      -> upload validation and temporary file handling
+      -> local rule-based parser or explicitly selected Gemini/Cerebras extractor
+      -> skill normalization
+      -> rule-based ATS scoring
+      -> keyword-based recommendations
+  -> JSON analysis response
 ```
 
-## 5. Runtime Analysis Flow
-The active V1 runtime flow is:
-1. The backend accepts a resume upload.
-2. The file is validated for format, size, and structure.
-3. Text is extracted from PDF or DOCX.
-4. The selected extractor runs for the analysis.
-5. The extracted data is enriched and normalized.
-6. ATS scoring and recommendations are generated.
-7. The response is returned to the UI.
+## Technology
 
-## 6. Project Structure
+- **Frontend:** React 19, Vite, JavaScript, CSS modules and custom CSS
+- **Backend:** Python, FastAPI, Pydantic, Uvicorn
+- **Parsing:** PyPDF2, pdfminer.six fallback, docx2txt, and optional spaCy model support
+- **Optional AI extraction:** Google Gemini (`provider=gemini`) or Cerebras (`provider=cerebras`)
+
+Dependency manifests are [frontend/package.json](frontend/package.json) and [backend/requirements.txt](backend/requirements.txt).
+
+## Repository structure
+
 ```text
-Backend/
-  app/
-    api.py                  # FastAPI routes and response models
-    config.py               # environment-driven configuration
-    models.py               # analysis result models
-    services/
-      analysis_service.py   # main orchestration service
-    parser/
-      custom_parser.py      # V1 local parser
-      llm_extractor.py      # Gemini extractor
-      text_extraction.py    # PDF/DOCX text extraction
-    validation/
-      validator.py          # file validation logic
-    knowledge/
-      repository.py         # skill normalization + unknown-skill tracking
-    ats/
-      engine.py             # ATS scoring logic
-    recommendation/
-      engine.py             # recommendation logic
+.
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── app/
+│       ├── api.py
+│       ├── config.py
+│       ├── ats/
+│       ├── knowledge/
+│       ├── parser/
+│       ├── recommendation/
+│       ├── services/
+│       └── validation/
+├── docs/
+├── frontend/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   └── src/
+├── .env.example
+└── README.md
 ```
 
-## 7. Setup Instructions
-### Prerequisites
-- Python 3.10+
-- pip
-- optional: a Gemini API key for fallback extraction
+## Requirements
 
-### Install dependencies
-```bash
-cd Backend
-pip install -r requirements.txt
-```
+- Python and pip
+- Node.js and npm
 
-## 8. Environment Variables
-Create a `.env` file in the project root or Backend folder with values such as:
-```env
-EXTRACTOR_PROVIDER=auto
-GEMINI_API_KEY=your_gemini_key
-MAX_UPLOAD_SIZE_MB=5.0
-```
+The repository does not specify minimum versions for these tools. The backend starts on port `8000`; the Vite development server uses port `5173`.
 
-## 9. Running the Application
-### Backend
-```bash
-cd Backend
+## Environment configuration
+
+The backend reads `GEMINI_API_KEY`, `CEREBRAS_API_KEY`, `CEREBRAS_MODEL`, `EXTRACTOR_PROVIDER`, and `MAX_UPLOAD_SIZE_MB`. Configuration loads a `.env` from `backend/` if present, otherwise from the repository root. The frontend optionally reads `VITE_API_URL`; without it, the API client uses `http://localhost:8000`.
+
+Copy [.env.example](.env.example) to a local `.env` and set values as needed. Keep real credentials out of source control.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `GEMINI_API_KEY` | unset | Key read by the optional Gemini extractor. |
+| `CEREBRAS_API_KEY` | unset | Key read by the optional Cerebras extractor. |
+| `CEREBRAS_MODEL` | `qwen-3.8-27b` | Cerebras model ID. The default is the smaller of the two models listed for shared inference in the current Cerebras model catalog; availability and pricing can change. |
+| `EXTRACTOR_PROVIDER` | `auto` | Provider default read by the service when no provider is supplied. `auto` selects the local rule-based extractor; it does not trigger AI fallback. |
+| `MAX_UPLOAD_SIZE_MB` | `5.0` | Maximum upload size checked by resume validation. |
+| `VITE_API_URL` | `http://localhost:8000` | Optional frontend API base URL. |
+
+The `/api/analyze` route defaults its provider form field to `auto`; the frontend starts with the local rule-based extractor selected. Select Gemini or Cerebras explicitly in the upload screen. Cerebras uses the existing `requests` dependency and the `qwen-3.8-27b` default model; set `CEREBRAS_MODEL` to another supported model ID if needed. The Gemini SDK is not listed in `backend/requirements.txt`, so the Gemini path is not fully reproducible from the provided backend manifest alone.
+
+## Run locally
+
+In a terminal at the repository root, start the backend:
+
+```powershell
+cd backend
+python -m pip install -r requirements.txt
 python main.py
 ```
 
-The API will be available at:
-- http://localhost:8000/docs
+In a second terminal at the repository root, start the frontend:
 
-### Frontend
-```bash
-cd "resume Analyzer frontend"
-cc
+```powershell
+cd frontend
+npm install
 npm run dev
 ```
 
-## 10. Example Analysis Flow
-A user uploads a resume.
-The backend validates the file, extracts text, runs the local parser, optionally invokes Gemini, normalizes skills, scores ATS readiness, and returns a structured analysis payload.
+Open the frontend URL printed by Vite (normally `http://localhost:5173`). The backend API documentation is available at `http://localhost:8000/docs`. The Vite development configuration proxies `/api` and `/health` to the backend.
 
-## 11. ATS Scoring Summary
-The V1 ATS engine is rule-based and explainable. It evaluates:
-- contact and profile completeness
-- experience section quality
-- education details
-- projects presence
-- skill coverage
-- section formatting signals
-- simple keyword alignment
+## API overview
 
-## 12. Recommendation Engine Summary
-The recommendation engine uses detected keywords and known resume signals to suggest:
-- likely career field
-- recommended skills
-- relevant learning resources
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/` | API welcome response |
+| `GET` | `/health` | Health and advertised provider names |
+| `POST` | `/api/analyze` | Analyze a PDF or DOCX upload; multipart fields are `file` and optional `provider` |
+| `GET` | `/api/knowledge/skills` | List in-memory skill aliases |
+| `POST` | `/api/knowledge/skills` | Add an in-memory skill alias |
+| `DELETE` | `/api/knowledge/skills/{raw_term}` | Remove an in-memory skill alias |
+| `POST` | `/api/job-match` | Compare `job_description` text with a supplied `skills` list |
 
-## 13. Limitations
-The V1 release is intentionally limited. It does not yet provide:
-- fully production-grade OCR for scanned PDFs
-- a full multi-provider router or key pool
-- deep field-by-field merge logic across multiple providers
-- enterprise-grade observability and retries
-- broad domain generalization for all resume styles
+See the interactive API documentation at `/docs` while the backend is running.
 
-## 14. Roadmap / V1.5 Preview
-The next phase will focus on:
-- stronger confidence scoring
-- provider routing and multiple API key pools
-- merge logic between multiple providers
-- OCR and scanned-resume support
-- graceful partial-failure handling
-- production observability and reliability
+## Data handling and storage
+
+Uploaded files are written to a temporary directory for analysis and then removed by the API handler. The active application does not store accounts, uploaded resumes, analysis records, or feedback in a database. Skill aliases are held in memory and reset on process restart. Unknown-skill counts are stored in `backend/app/knowledge/unknown_skills.json`.
+
+When Gemini or Cerebras is selected, extracted resume text is sent to that external provider. Use only with appropriate consent and data-handling practices.
+
+## Known limitations
+
+- Parsing and ATS scoring are heuristic and can vary by resume layout and content.
+- Image-only/scanned PDFs are rejected; OCR is not implemented.
+- `auto` selects the local parser; automatic fallback or provider routing is not implemented.
+- Gemini initialization can fail if its SDK is unavailable or configuration is missing; the service does not then fall back to the local parser.
+- The Gemini SDK is not included in the backend dependency manifest.
+- Cerebras model availability, rate limits, and pricing are controlled by Cerebras and may change.
+- Job matching uses token/substring overlap, not semantic matching.
+- Skill alias edits are not persisted; the unknown-skill JSON file is a local file, not a database.
+- No authentication or authorization is implemented for the API.
+- The database design document describes a proposal, not an implemented database.
+- No automated test suite was found in the repository during documentation review; runtime behavior has not been verified by this README update.
+
+## Documentation
+
+- [Backend setup and development](backend/README.md)
+- [Frontend setup and development](frontend/README.md)
+- [Runbook](docs/RUNBOOK.md)
+- [Architecture](docs/V1_ARCHITECTURE.md)
+- [API and service flow](docs/API_OR_SERVICE_FLOW.md)
+- [Project structure](docs/PROJECT_STRUCTURE.md)
+- [Proposed database design](docs/DATABASE_DESIGN.md)
+- [V1.5 roadmap](docs/V1_5_ROADMAP.md)

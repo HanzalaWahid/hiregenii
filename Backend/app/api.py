@@ -293,7 +293,7 @@ async def health_check():
     return HealthResponse(
         status="operational",
         version="2.0.0",
-        providers=["auto", "custom_rule", "gemini"],
+        providers=["auto", "custom_rule", "gemini", "cerebras"],
     )
 
 
@@ -305,7 +305,7 @@ async def health_check():
 )
 async def analyze_resume(
     file: UploadFile = File(..., description="Resume file (PDF or DOCX)"),
-    provider: str = Form(default="auto", description="Extraction provider: auto | custom_rule | gemini"),
+    provider: str = Form(default="auto", description="Extraction provider: auto | custom_rule | gemini | cerebras"),
 ):
     """
     Upload a resume file and receive:

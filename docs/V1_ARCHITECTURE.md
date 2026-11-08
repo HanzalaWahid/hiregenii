@@ -1,68 +1,63 @@
-# V1 Architecture
+# V1 architecture
 
-## Purpose
-The V1 architecture is a cost-conscious, maintainable MVP for resume analysis. It prioritizes a local parser first, optional Gemini fallback for weak extraction, and a simple, explainable pipeline that can be understood and extended by a small engineering team.
+This document describes the current implementation in `frontend/` and `backend/`. Proposed database and roadmap material is labeled separately in its own documents.
 
-## Design Decisions
-- Keep the first-pass parser local and deterministic.
-- Use either the local parser or Gemini as a selected single provider for each analysis run.
-- Keep the architecture modular enough for future expansion without over-engineering V1.
-- Exclude Ollama from the active runtime path in V1.
+## Implemented architecture
 
-## High-Level Architecture
 ```text
-Resume Upload
-  -> File Validation
-  -> Text Extraction
-  -> Selected Extractor
-  -> Knowledge Normalizer
-  -> ATS Scorer
-  -> Recommendation Engine
-  -> Analysis Result / UI
+React/Vite browser client
+  -> FastAPI routes and response schemas
+      -> file validation and temporary upload handling
+      -> selected text extractor
+      -> parsed-field enrichment and skill normalization
+      -> rule-based ATS scoring
+      -> keyword-based recommendations
+  -> JSON response to frontend
 ```
 
-## Runtime Flow
-1. The upload endpoint accepts a PDF or DOCX file.
-2. The validator checks file type, size, and structure.
-3. Text extraction reads the document content.
-4. The selected extractor attempts structured extraction.
-5. The parsed data is enriched and normalized.
-6. The normalized data feeds ATS scoring and recommendations.
-7. The final payload is returned to the frontend.
+The frontend is mounted by `frontend/src/main.jsx`. Its application views are assembled in `frontend/src/App.jsx`; shared analysis state is held in `frontend/src/context/ResumeContext.jsx`; HTTP operations are in `frontend/src/utils/api.js`.
 
-## Module Responsibilities
-- api.py: request handling, validation response mapping, and output shaping
-- services/analysis_service.py: orchestration of the runtime pipeline
-- parser/custom_parser.py: V1 local extraction logic
-- parser/llm_extractor.py: Gemini fallback integration
-- parser/text_extraction.py: extraction of raw text from PDF/DOCX
-- validation/validator.py: file integrity and safety checks
-- knowledge/repository.py: skill normalization and unknown-skill logging
-- ats/engine.py: ATS scoring and breakdown generation
-- recommendation/engine.py: skill and career recommendations
+The backend starts through `backend/main.py`. Routes and Pydantic response schemas are in `backend/app/api.py`; the orchestration service is in `backend/app/services/analysis_service.py`.
 
-## Parser Strategy
-The V1 parser strategy favors deterministic rules and low operational cost. Gemini is only used when the local parser produces sparse or weak output.
+## Analysis pipeline
 
-## Extractor Strategy
-V1 supports one selected extractor per run. The default path is the custom rule-based parser, and Gemini is available when explicitly selected via configuration or request input.
+1. `POST /api/analyze` receives a PDF or DOCX and a provider form value.
+2. The route saves the upload to a temporary directory.
+3. `backend/app/validation/validator.py` checks extension, size, file signature, integrity, and text presence.
+4. `backend/app/parser/text_extraction.py` extracts PDF text with PyPDF2 and attempts pdfminer.six if that extraction raises; DOCX text is extracted with docx2txt.
+5. The service uses the local rule-based parser unless `gemini` or `cerebras` was explicitly selected.
+6. The analysis service enriches the fields, normalizes skills, and computes confidence and candidate level.
+7. `backend/app/ats/engine.py` calculates explainable rule-based ATS scores.
+8. `backend/app/recommendation/engine.py` uses keyword rules and the course catalog to generate career and skill recommendations.
+9. The API returns its `AnalysisResponse` and removes the temporary upload directory in the main processing cleanup block.
 
-## ATS Scoring Flow
-The ATS scorer uses extracted fields such as name, email, skills, experience, education, and projects to generate a score and explainable sub-scores.
+## Provider selection: implemented behavior
 
-## Recommendation Flow
-The recommendation engine consumes the normalized extraction result and suggests likely career fields, skills, and resources.
+- `auto` and `custom_rule` select the local rule-based extractor.
+- `gemini` selects `GeminiExtractor`, which sends extracted resume text to Google Gemini and parses the response as JSON.
+- `cerebras` selects `CerebrasExtractor`, which sends extracted resume text to Cerebras chat completions and parses the response as JSON. It uses `CEREBRAS_API_KEY` and defaults to model `qwen-3.8-27b`, configurable through `CEREBRAS_MODEL`.
+- `fallback_used` is included in the result but remains false in the current service. There is no local-to-Gemini or Gemini-to-local fallback or provider router.
+- If Gemini cannot be initialized, the service logs a warning but does not choose another extractor; analysis can fail when it tries to use the unavailable extractor.
+- `POST /api/analyze` defaults to `auto`. The frontend currently sends `custom_rule` by default. `EXTRACTOR_PROVIDER` supplies the service default only when no provider is passed to the service.
+- The Gemini SDK is imported by the extractor but is not declared in `backend/requirements.txt`.
+- Cerebras is explicitly selected; its key remains server-side and its model availability and usage limits are controlled by Cerebras.
 
-## Normalization / Knowledge Layer Role
-The knowledge layer normalizes extracted skill names, resolves common aliases, and records unknown skills for future review.
+## Scoring, recommendations, and knowledge
 
-## Why Ollama Is Excluded from V1
-Ollama is excluded from V1 to keep the architecture simple, predictable, and easier to document. V1 prioritizes a local parser plus a single fallback provider rather than a broader local-model strategy.
+ATS scoring is implemented as rules in `RuleBasedATSScorer`. Recommendations are generated by `RuleBasedRecommendationEngine` using keyword matching against resume text; job-description matching in the API is token/substring overlap, not semantic matching.
 
-## Current Limitations
-- OCR for scanned PDFs is not part of V1.
-- The extraction path is single-provider per run.
-- The system is not yet a full production provider router.
-- The knowledge layer is limited to normalization and unknown-skill logging.
+`KnowledgeRepository` holds its alias mapping in memory. Add/delete API operations therefore do not persist across backend restarts. Unknown-skill counts are written to `backend/app/knowledge/unknown_skills.json`. The active SaaS API has no database integration, user-account system, or durable analysis history.
 
+## Planned, not implemented
 
+Items in [V1_5_ROADMAP.md](V1_5_ROADMAP.md) are proposals, not current runtime capabilities. These include OCR, provider routing/fallback, field-level provider merging, partial-result handling, background jobs, and operational observability. The relational model in [DATABASE_DESIGN.md](DATABASE_DESIGN.md) is also proposed; it does not describe an active database schema.
+
+## Current limitations
+
+- Scanned/image-only resumes are rejected; OCR is not implemented.
+- Extraction and scoring rely on heuristics and may vary with document format.
+- Gemini requires a key and an SDK not listed in the backend manifest. Cerebras requires a configured key and sends resume text to an external provider.
+- Provider initialization failures do not trigger fallback.
+- Skill aliases are in memory; unknown-skill counts are file-backed.
+- Uploads are temporarily stored for analysis; analysis results are not persisted.
+- The API does not implement authentication or authorization.

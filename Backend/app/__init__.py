@@ -11,6 +11,7 @@ from .ats import ATSScorer, RuleBasedATSScorer
 from .knowledge import KnowledgeRepository
 from .models import ATSResult, RecommendationResult, ResumeAnalysisResult, ResumeData
 from .parser import (
+    CerebrasExtractor,
     CustomRuleBasedExtractor,
     GeminiExtractor,
     ResumeExtractor,
@@ -31,6 +32,7 @@ __all__ = [
     # Parser
     "ResumeExtractor",
     "CustomRuleBasedExtractor",
+    "CerebrasExtractor",
     "GeminiExtractor",
     # Recommendation
     "RecommendationEngine",

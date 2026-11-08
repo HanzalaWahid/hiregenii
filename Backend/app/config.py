@@ -27,7 +27,7 @@ def get_field_rules() -> dict:
 
 
 def get_extractor_provider() -> str:
-    """Returns the active V1 extractor strategy: 'auto', 'custom_rule', or 'gemini'."""
+    """Return the configured strategy: 'auto', 'custom_rule', 'gemini', or 'cerebras'."""
     return get_env('EXTRACTOR_PROVIDER', 'auto')
 
 

@@ -1,8 +1,10 @@
-# Database Design Document
+# Proposed Database Design (Not Implemented)
+
+> **Status:** This document describes a possible future relational database architecture. The current React/FastAPI application does not connect to a relational database, run migrations, or persist user accounts, resumes, analysis results, or job matches. The entities and fields below are design proposals, not implemented tables or APIs.
 
 ## Overview
 
-This database is designed for a Resume Intelligence Platform that stores user profiles, resumes, skill knowledge, matching results, job data, and AI provider configuration.
+The proposed database could store user profiles, resumes, skill knowledge, matching results, job data, and AI provider configuration.
 
 The system is structured as a layered domain model with clear separation between:
 - user data

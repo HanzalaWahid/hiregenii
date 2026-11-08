@@ -23,9 +23,10 @@ const PIPELINE_STAGES = [
 ];
 
 const PROVIDERS = [
-  { value: 'auto', label: 'Auto (Local + Optional Gemini)', description: 'Default V1 flow: local extraction with Gemini fallback if needed' },
+  { value: 'auto', label: 'Auto (Local)', description: 'Uses the local rule-based extractor; no AI provider fallback' },
   { value: 'custom_rule', label: 'Custom Rule-based Extractor', description: 'Fast offline extraction — no API key needed' },
   { value: 'gemini', label: 'Gemini LLM Extractor', description: 'Google Gemini AI — requires GEMINI_API_KEY' },
+  { value: 'cerebras', label: 'Cerebras Qwen Extractor', description: 'Cerebras inference — requires CEREBRAS_API_KEY' },
 ];
 
 export default function UploadView({ setActiveTab }) {
@@ -261,7 +262,7 @@ export default function UploadView({ setActiveTab }) {
           </p>
           <p className={styles.emptyMsg}>
             Extraction path: <strong>{analysisResult.provider_used || 'auto'}</strong>
-            {analysisResult.fallback_used ? ' · Gemini fallback used' : ''}
+            {analysisResult.fallback_used ? ' · fallback used' : ''}
             {typeof analysisResult.confidence_score === 'number' ? ` · Confidence ${Math.round(analysisResult.confidence_score * 100)}%` : ''}
           </p>
 
