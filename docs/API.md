@@ -1,4 +1,4 @@
-# API Reference
+# API
 
 This reference is derived from route declarations in the current FastAPI
 application. Resume-analysis and candidate/recruiter endpoints are mounted in
@@ -89,7 +89,7 @@ response as a stable contract.
 | `GET /recommend/{candidate_id}` | JWT, CV owner | Path candidate id | `{candidate_id, recommendations}`; 404 for other/nonexistent CV |
 
 Candidate CV upload supports PDF, DOCX, and UTF-8 TXT. The response and stored
-fields include sensitive resume data; see [security review](SECURITY_REVIEW.md).
+fields include sensitive resume data; see [SECURITY.md](SECURITY.md).
 
 ### Ranking, decisions, and reveal
 
@@ -123,7 +123,7 @@ fields include sensitive resume data; see [security review](SECURITY_REVIEW.md).
 |---|---|---|---|
 | `GET /bias-report` | None in route | None | `{bias_detected, metrics: {demographic_parity, equal_opportunity}, summary}` based on local CSV; if unavailable returns zero metrics and unavailable summary |
 
-The current response labels/threshold are code-derived and are not a validated fairness assessment. This endpoint's unauthenticated exposure is flagged in [security review](SECURITY_REVIEW.md).
+The current response labels/threshold are code-derived and are not a validated fairness assessment. This endpoint's unauthenticated exposure is described in [SECURITY.md](SECURITY.md).
 
 ## 3. Current integration boundaries
 

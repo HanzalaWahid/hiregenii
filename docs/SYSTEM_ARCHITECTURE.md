@@ -205,6 +205,6 @@ Production deployment and live Supabase state have not been verified.
 ## 9. Related documents
 
 See [ERD](ERD.md) for implemented and proposed data,
-[API reference](API_REFERENCE.md) for route contracts,
-[security review](SECURITY_REVIEW.md) for risks, and
-[implementation roadmap](IMPLEMENTATION_ROADMAP.md) for proposed sequencing.
+[API](API.md) for route contracts, [SECURITY](SECURITY.md) for the current
+source-based security posture, and [DATABASE](DATABASE.md) for persistence
+status.

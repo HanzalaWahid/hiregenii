@@ -1,6 +1,6 @@
 # Entity Relationship Documentation
 
-**Status:** Current entities below are derived from SQLAlchemy declarations in `Hire-geni/backend/models.py`. This is not a verified live-database schema. The separate Analyzer has no active database model. Proposed unified-platform entities are explicitly separated below.
+**Status:** Current entities below are derived from SQLAlchemy declarations in `backend/app/db/models.py`. This is not a verified live-database schema. Resume-analysis results are not persisted. Proposed unified-platform entities are explicitly separated below.
 
 ## 1. Current Hire-geni entities
 
@@ -148,16 +148,14 @@ There is no `organizations` table, organization membership, `admin` role, tenant
 - Explicit indexes on user/job/application/CV identifiers and CV creation time as declared in `models.py`.
 - Foreign keys are declared by SQLAlchemy. Enforcement behavior in any deployed SQLite database and live schema state were not independently inspected.
 
-The startup migration in `Hire-geni/backend/main.py` adds user-profile columns with broad exception suppression and adds the application unique index when safe. `Hire-geni/backend/migrate_db.py` is a separate SQLite script for `xai_explanation`. These are not Supabase migrations.
+`backend/app/db/migrations.py` adds user-profile columns at startup and adds the application unique index when safe. If duplicate application rows exist, it logs the condition and does not add the index. These are local SQLite startup migrations, not Supabase migrations.
 
-## 4. Existing ERD differences
+## 4. Requirements compared with the model
 
-The original [Hire-geni ERD](legacy/hire-geni/ERD.md) describes the same broad entities but is less exact than the ORM. It does not list every implemented field/constraint and describes a candidate/job relationship in prose. The source of implementation truth for the current model is `backend/app/db/models.py` (formerly `Hire-geni/backend/models.py`). The PRD requests interview status tracking, but the inspected API provides no status-update route.
+The model is the implementation source of truth; [PRD.md](PRD.md) is the requirements baseline. Interviews have a `status` field, but the API has no status-update route. The model also has no organization or membership entities, platform-admin role, tenant key, application-to-interview foreign key, or Supabase Auth user ID.
 
 ## 5. Proposed entities (not implemented)
 
 The supplied target architecture requires a future Supabase data model, but no authoritative complete schema was approved or found. Potential entities such as `organizations`, organization memberships, platform admins, auth-linked profiles, storage metadata, and audit events are **proposals requiring product/security decisions**, not existing tables.
 
-The candidate-platform planning document (`docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md`) proposes additional resume-builder tables such as `resume_documents`, `resume_document_versions`, `resume_files`, `job_descriptions`, `ats_reports`, and related candidate tools. They are planning material only and do not belong to the implemented ERD.
-
-No claim is made that a live Supabase project exists or contains any of these tables. See [system architecture](SYSTEM_ARCHITECTURE.md) and [roadmap](IMPLEMENTATION_ROADMAP.md).
+No claim is made that a live Supabase project exists or contains any of these tables. See [DATABASE.md](DATABASE.md) for storage and migration status and [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) for the documented target direction.

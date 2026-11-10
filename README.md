@@ -6,7 +6,7 @@ An AI-assisted career and recruitment platform:
 
 It unifies the former **AI Resume Analyzer** and **Hire-geni** apps into one frontend and one backend.
 
-> Status: development. The backend still uses a local SQLite database and its own JWT auth. Moving to Supabase (Auth, Postgres + RLS, Storage, Realtime) is planned; see [docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md](docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md).
+> Status: development. The backend still uses a local SQLite database and its own JWT auth. Supabase (Auth, Database, RLS, Storage, Realtime) is the documented target direction, but is not integrated.
 
 ## Repository structure
 
@@ -40,7 +40,7 @@ It unifies the former **AI Resume Analyzer** and **Hire-geni** apps into one fro
 │   ├── data/  uploads/       Local SQLite DB and uploaded CVs (gitignored)
 │   └── requirements.txt
 ├── supabase/                 migrations/ and functions/ placeholders (database work deferred)
-├── docs/                     PRD, ERD, architecture, API reference, plans
+├── docs/                     Six canonical product and technical documents
 ├── CLAUDE.md                 Project rules for Claude Code
 └── .env.example              Backend configuration template
 ```
@@ -104,10 +104,13 @@ The project has no automated test files (project rule, see [CLAUDE.md](CLAUDE.md
 | `Hire-geni/backend/agents/` | `backend/app/modules/resume_engine/agents/` (`orchestrator.py` → `modules/recruiters/suggestions.py`) |
 | `Hire-geni/frontend/` | `frontend/` |
 | `frontend/` (analyzer, React JS) | ported to `frontend/src/modules/job-seeker/resume-analysis/` (the original was removed; it is in git history) |
-| `Hire-geni/docs/` | `docs/legacy/hire-geni/` |
-
 All API paths are unchanged.
 
 ## Documentation
 
-Start at [docs/README.md](docs/README.md). Product rules: [docs/PRD.md](docs/PRD.md) and [docs/ERD.md](docs/ERD.md). Candidate-platform plan and decisions: [docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md](docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md).
+- [Product requirements](docs/PRD.md)
+- [Entity relationships](docs/ERD.md)
+- [Database and storage](docs/DATABASE.md)
+- [System architecture](docs/SYSTEM_ARCHITECTURE.md)
+- [API](docs/API.md)
+- [Security](docs/SECURITY.md)

@@ -1,12 +1,12 @@
 # HireGenii Product Requirements Document
 
-**Status:** Working draft based on existing product documentation and source inspection. Not an approved replacement for [Hire-geni's existing PRD](legacy/hire-geni/PRD.md).
+**Status:** Working requirements baseline, consolidated from the former Hire-geni requirements and current source inspection. Confirmed business requirements, current implementation, proposed scope, and unresolved decisions are identified separately below.
 
 ## 1. Product vision
 
 HireGenii is intended to bring candidate resume analysis and job-seeking workflows together with recruiter hiring workflows. The product direction describes a coherent candidate profile and resume-analysis capability that may support job discovery, applications, and recruiter review. AI scores and recommendations are advisory; a human recruiter remains responsible for application decisions.
 
-The repository currently contains two separate products. This document distinguishes current implementation from the documented Hire-geni requirements and future unified design.
+The former AI Resume Analyzer and Hire-geni applications now share one frontend and one FastAPI application. Their authentication and persistence flows remain distinct; this is not yet a unified identity or data platform.
 
 ## 2. Problem statement
 
@@ -42,7 +42,7 @@ The “existing requirement” column summarizes the Hire-geni PRD. “Current e
 
 | ID | Requirement / behavior | Current evidence and discrepancy |
 |---|---|---|
-| AUTH-1 | Users register and log in as seeker or recruiter; protected routes use JWT authentication | Implemented in `Hire-geni/backend/main.py`, `auth.py`, and `security.py`; the separate Analyzer has no auth |
+| AUTH-1 | Users register and log in as seeker or recruiter; protected routes use JWT authentication | Candidate/recruiter routes use JWT through `backend/app/core/`; resume-analysis routes do not declare API authentication |
 | PROF-1 | Seekers manage profile information; recruiters manage company details | Hire-geni endpoints and pages exist; there is no organization entity |
 | RES-1 | Upload PDF or DOCX CV, extract content, and create candidate data | Hire-geni accepts PDF, DOCX, and TXT; stores text and parsed output in SQLite. Analyzer accepts PDF/DOCX and returns analysis without persistence |
 | PRIV-1 | Initial recruiter review is anonymized; candidate controls identity reveal | Hire-geni stores original and anonymized text and an application-level reveal status; access logic is implemented in CV detail and reveal routes |
@@ -64,7 +64,7 @@ The “existing requirement” column summarizes the Hire-geni PRD. “Current e
 4. Review applications and notifications.
 5. Respond to identity-reveal requests and view interviews.
 
-The separate Analyzer flow uploads a resume, returns analysis data, and keeps current results in frontend context. It has no account, application, or analysis-history workflow.
+The resume-analysis flow is integrated into the seeker interface, but remains a distinct API workflow: it returns analysis data and keeps current results in frontend context. It has no analysis-history workflow and its routes do not require a JWT.
 
 ### 6.2 Recruiter (current Hire-geni)
 
@@ -124,22 +124,21 @@ The following criteria preserve existing requirements; they are not claims of cu
 ### Not established by existing requirements
 
 - Admin powers, organization management, tenant membership, or recruiter organization approval.
-- External job tracking, resume builder/version history, cover letters, AI rewriting, interview preparation, or PDF export.
+- External job tracking, resume builder/version history, cover letters, AI rewriting, interview preparation, or PDF export. These appeared in a separate planning draft but are not confirmed requirements.
 - Supabase schema, RLS policies, migration of SQLite/local files, and live database contents.
 - Production deployment topology, SLOs, rate limits, and data retention/deletion periods.
 - Legal/privacy compliance certification or a guarantee that anonymization removes all identifying data.
 
 ### Decisions required
 
-1. Is the target tree the approved implementation destination, and should current applications remain runnable during migration?
-2. What account/profile is canonical when combining the two applications?
-3. Should organizations and multiple recruiter memberships be introduced? What is the tenant boundary?
-4. What admin actions and safeguards are required?
-5. How should current SQLite data, uploaded files, and analysis state be handled?
-6. Which resume data may be sent to each AI provider, under what consent and retention terms?
-7. Should interview status mutation, cancellation, and candidate rescheduling be supported?
-8. What production security, performance, availability, and compliance criteria apply?
+1. What account/profile is canonical across candidate and recruiter workflows?
+2. Should organizations and multiple recruiter memberships be introduced? What is the tenant boundary?
+3. What admin actions and safeguards are required?
+4. How should current SQLite data, uploaded files, and analysis state be handled?
+5. Which resume data may be sent to each AI provider, under what consent and retention terms?
+6. Should interview status mutation, cancellation, and candidate rescheduling be supported?
+7. What production security, performance, availability, and compliance criteria apply?
 
 ## 11. Source of truth and discrepancies
 
-The existing Hire-geni PRD remains the source for its documented v1 business rules; its ERD is compared against implementation in [ERD.md](ERD.md). The root Analyzer README and current-state architecture docs describe a different, unauthenticated service. The proposed unified architecture in [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) must not be read as proof of completed integration.
+The documented v1 business requirements are consolidated here and compared with current entities in [ERD.md](ERD.md). Current implementation is described in [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) and [API.md](API.md); neither planned Supabase services nor candidate-platform concepts should be read as implemented functionality.
