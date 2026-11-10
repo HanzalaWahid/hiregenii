@@ -1,24 +1,42 @@
-# AI Resume Intelligence Platform — Backend Dependencies
+# HireGenii backend — merged from the AI Resume Analyzer and Hire-geni requirements.
 
-# Core API Framework
+# API
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 python-multipart>=0.0.9
+websockets
+pydantic>=2.0.0
+email-validator
+python-dotenv>=1.0.0
 
-# PDF / DOCX Parsing
+# Auth (interim custom JWT until Supabase Auth, phase F4)
+python-jose[cryptography]
+passlib
+
+# Database (interim local SQLite until Supabase, phase F3)
+sqlalchemy
+
+# Document parsing
 PyPDF2>=3.0.1
 pdfminer.six>=20221105
 docx2txt>=0.8
+pdfplumber
+python-docx
 
-# NLP
+# NLP (also needs the model: python -m spacy download en_core_web_sm)
 spacy>=3.7.0
 
-# LLM / HTTP
+# LLM providers / HTTP
 requests>=2.31.0
+openai
+google-genai
 
-# Environment & Config
-python-dotenv>=1.0.0
+# Analytics (bias report)
+pandas
 
-# Data validation
-pydantic>=2.0.0
-
+# Listed in the previous Hire-geni requirements but not imported by current code.
+# Kept for now; review for removal.
+pypdf
+scikit-learn
+faker
+tqdm

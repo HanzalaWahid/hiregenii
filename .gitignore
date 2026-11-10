@@ -21,7 +21,13 @@ dist/
 .DS_Store
 .vscode/
 
-# Uploaded resume files (local dev artifacts)
+# Uploaded resume files and local databases (sensitive local dev artifacts)
+backend/uploads/
+backend/data/*.db
+backend/data/biased_hiring_model.pkl
+backend/data/fair_hiring_model.pkl
+backend/data/fair_preprocessor.pkl
+backend/data/fairness_dashboard.png
 backend/app/Uploaded_Resume/*
 !backend/app/Uploaded_Resume/.gitkeep
 app/Uploaded_Resume/*

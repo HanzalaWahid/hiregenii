@@ -1,35 +1,39 @@
-# React/Vite frontend
+# AI Powered Recruitment Platform by Explainable AI
 
-The frontend is a React single-page application that sends resume analysis, skill-alias, job-match, and health requests to the FastAPI backend.
+## Project Info
 
-## Setup and development
+This project is an AI Powered Recruitment Platform by Explainable AI, aiming to reduce bias in the recruitment process.
 
-From the repository root:
+## Getting Started
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+To work on this project locally, follow these steps:
 
-Open the local URL printed by Vite (normally `http://localhost:5173`). The Vite development server proxies `/api` and `/health` requests to `http://localhost:8000`.
+1.  **Clone the repository**:
+    ```sh
+    git clone <YOUR_GIT_URL>
+    ```
 
-## Available scripts
+2.  **Navigate to the project directory**:
+    ```sh
+    cd fairhire-ui
+    ```
 
-Run these commands from `frontend/`:
+3.  **Install dependencies**:
+    ```sh
+    npm install
+    ```
 
-```powershell
-npm run build
-npm run lint
-npm run preview
-```
+4.  **Start the development server**:
+    ```sh
+    npm run dev
+    ```
 
-These are the scripts declared in `package.json`; this documentation update does not claim that they have been run.
+## Technologies Used
 
-## API configuration
+This project is built with:
 
-The API client uses `VITE_API_URL` when set and otherwise defaults to `http://localhost:8000`. The development proxy target is configured in `vite.config.js`.
-
-The application entry point is `src/main.jsx`; `src/App.jsx` renders the views, and `src/context/ResumeContext.jsx` holds analysis state. Backend calls are centralized in `src/utils/api.js`.
-
-See the [root README](../README.md) for backend setup, available API routes, and application limitations.
+-   Vite
+-   TypeScript
+-   React
+-   shadcn-ui
+-   Tailwind CSS

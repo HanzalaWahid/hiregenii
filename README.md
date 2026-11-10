@@ -1,152 +1,113 @@
-# AI Resume Analyzer
+# HireGenii
 
-AI Resume Analyzer is a React and FastAPI application that extracts information from PDF and DOCX resumes, calculates a rule-based ATS-style score, and provides keyword-based career and skill recommendations.
+An AI-assisted career and recruitment platform:
+- **Job seekers** analyze and improve their resume and apply to jobs.
+- **Recruiters** post jobs, review anonymized candidates and schedule interviews.
 
-## Current features
+It unifies the former **AI Resume Analyzer** and **Hire-geni** apps into one frontend and one backend.
 
-- Upload and validate text-based PDF or DOCX resumes.
-- Extract resume text and structured fields using a local rule-based parser with optional spaCy assistance.
-- Optionally select the Gemini or Cerebras extractor.
-- Normalize skills using an in-process alias map and record unknown skills in a JSON file.
-- Return an explainable ATS score and heuristic career recommendations.
-- Compare a job description with supplied resume skills using keyword overlap.
-- View and modify skill aliases through the API.
-
-The application does not currently provide accounts, authentication, durable database storage, OCR, or automatic AI-provider fallback. See [Known limitations](#known-limitations).
-
-## Architecture
-
-```text
-React/Vite frontend
-  -> FastAPI API
-      -> upload validation and temporary file handling
-      -> local rule-based parser or explicitly selected Gemini/Cerebras extractor
-      -> skill normalization
-      -> rule-based ATS scoring
-      -> keyword-based recommendations
-  -> JSON analysis response
-```
-
-## Technology
-
-- **Frontend:** React 19, Vite, JavaScript, CSS modules and custom CSS
-- **Backend:** Python, FastAPI, Pydantic, Uvicorn
-- **Parsing:** PyPDF2, pdfminer.six fallback, docx2txt, and optional spaCy model support
-- **Optional AI extraction:** Google Gemini (`provider=gemini`) or Cerebras (`provider=cerebras`)
-
-Dependency manifests are [frontend/package.json](frontend/package.json) and [backend/requirements.txt](backend/requirements.txt).
+> Status: development. The backend still uses a local SQLite database and its own JWT auth. Moving to Supabase (Auth, Postgres + RLS, Storage, Realtime) is planned; see [docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md](docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md).
 
 ## Repository structure
 
 ```text
-.
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   └── app/
-│       ├── api.py
-│       ├── config.py
-│       ├── ats/
-│       ├── knowledge/
-│       ├── parser/
-│       ├── recommendation/
-│       ├── services/
-│       └── validation/
-├── docs/
-├── frontend/
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── vite.config.js
+├── frontend/                 React 18 + TypeScript + Vite + shadcn/ui
 │   └── src/
-├── .env.example
-└── README.md
+│       ├── app/              App shell, routes, landing and 404 pages
+│       ├── components/       Shared UI (shadcn/ui in components/ui)
+│       ├── layouts/          Dashboard layout, header, sidebar
+│       ├── modules/
+│       │   ├── auth/         Auth context, protected route, login/register
+│       │   ├── job-seeker/   Seeker pages + resume-analysis/ (ATS report, explorer, job matcher, skills)
+│       │   ├── recruiter/    Recruiter pages
+│       │   ├── shared/       Pages used by both roles (interviews)
+│       │   └── admin/        Planned
+│       ├── services/         API client
+│       ├── hooks/  types/  utils/
+├── backend/                  One FastAPI application
+│   ├── app/
+│   │   ├── main.py           App, middleware, health routes
+│   │   ├── api/router.py     Includes every module router
+│   │   ├── core/             Config (.env loading), security (JWT/passwords), auth dependency
+│   │   ├── db/               SQLAlchemy session, models, startup migrations (interim SQLite)
+│   │   ├── services/         Shared agent instances, realtime (WebSocket), access helpers, text extraction
+│   │   ├── integrations/     Planned (Supabase client)
+│   │   └── modules/
+│   │       ├── auth/ candidates/ jobs/ applications/ recruiters/ interviews/ notifications/
+│   │       ├── resumes/      CV upload + resume analysis routes (/api/analyze, /api/job-match, ...)
+│   │       ├── resume_engine/  Parsing, ATS scoring, recommendations, skills, anonymization, explanations
+│   │       └── organizations/ admin/   Planned
+│   ├── data/  uploads/       Local SQLite DB and uploaded CVs (gitignored)
+│   └── requirements.txt
+├── supabase/                 migrations/ and functions/ placeholders (database work deferred)
+├── docs/                     PRD, ERD, architecture, API reference, plans
+├── CLAUDE.md                 Project rules for Claude Code
+└── .env.example              Backend configuration template
 ```
 
-## Requirements
+## Running locally
 
-- Python and pip
-- Node.js and npm
+**Backend** (Python 3.11+), from `backend/`:
 
-The repository does not specify minimum versions for these tools. The backend starts on port `8000`; the Vite development server uses port `5173`.
-
-## Environment configuration
-
-The backend reads `GEMINI_API_KEY`, `CEREBRAS_API_KEY`, `CEREBRAS_MODEL`, `EXTRACTOR_PROVIDER`, and `MAX_UPLOAD_SIZE_MB`. Configuration loads a `.env` from `backend/` if present, otherwise from the repository root. The frontend optionally reads `VITE_API_URL`; without it, the API client uses `http://localhost:8000`.
-
-Copy [.env.example](.env.example) to a local `.env` and set values as needed. Keep real credentials out of source control.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `GEMINI_API_KEY` | unset | Key read by the optional Gemini extractor. |
-| `CEREBRAS_API_KEY` | unset | Key read by the optional Cerebras extractor. |
-| `CEREBRAS_MODEL` | `qwen-3.8-27b` | Cerebras model ID. The default is the smaller of the two models listed for shared inference in the current Cerebras model catalog; availability and pricing can change. |
-| `EXTRACTOR_PROVIDER` | `auto` | Provider default read by the service when no provider is supplied. `auto` selects the local rule-based extractor; it does not trigger AI fallback. |
-| `MAX_UPLOAD_SIZE_MB` | `5.0` | Maximum upload size checked by resume validation. |
-| `VITE_API_URL` | `http://localhost:8000` | Optional frontend API base URL. |
-
-The `/api/analyze` route defaults its provider form field to `auto`; the frontend starts with the local rule-based extractor selected. Select Gemini or Cerebras explicitly in the upload screen. Cerebras uses the existing `requests` dependency and the `qwen-3.8-27b` default model; set `CEREBRAS_MODEL` to another supported model ID if needed. The Gemini SDK is not listed in `backend/requirements.txt`, so the Gemini path is not fully reproducible from the provided backend manifest alone.
-
-## Run locally
-
-In a terminal at the repository root, start the backend:
-
-```powershell
-cd backend
-python -m pip install -r requirements.txt
-python main.py
+```bash
+pip install -r requirements.txt
 ```
 
-In a second terminal at the repository root, start the frontend:
+```bash
+python -m spacy download en_core_web_sm
+```
 
-```powershell
-cd frontend
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+- API docs are served at http://127.0.0.1:8000/docs.
+- Configuration comes from `.env`, either at the repository root or in `backend/`. Copy [.env.example](.env.example) and set at least `JWT_SECRET`.
+- The spaCy model matters: without it, the CV anonymizer falls back to regex-only redaction.
+
+**Frontend**, from `frontend/`:
+
+```bash
 npm install
+```
+
+```bash
 npm run dev
 ```
 
-Open the frontend URL printed by Vite (normally `http://localhost:5173`). The backend API documentation is available at `http://localhost:8000/docs`. The Vite development configuration proxies `/api` and `/health` to the backend.
+The dev server runs on http://localhost:8080. Set `VITE_API_BASE_URL` in `frontend/.env`; see [frontend/.env.example](frontend/.env.example).
 
-## API overview
+**Checks**
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/` | API welcome response |
-| `GET` | `/health` | Health and advertised provider names |
-| `POST` | `/api/analyze` | Analyze a PDF or DOCX upload; multipart fields are `file` and optional `provider` |
-| `GET` | `/api/knowledge/skills` | List in-memory skill aliases |
-| `POST` | `/api/knowledge/skills` | Add an in-memory skill alias |
-| `DELETE` | `/api/knowledge/skills/{raw_term}` | Remove an in-memory skill alias |
-| `POST` | `/api/job-match` | Compare `job_description` text with a supplied `skills` list |
+The project has no automated test files (project rule, see [CLAUDE.md](CLAUDE.md)). Available checks:
 
-See the interactive API documentation at `/docs` while the backend is running.
+- Frontend type check and build, from `frontend/`:
 
-## Data handling and storage
+  ```bash
+  npx tsc --noEmit -p tsconfig.app.json
+  ```
 
-Uploaded files are written to a temporary directory for analysis and then removed by the API handler. The active application does not store accounts, uploaded resumes, analysis records, or feedback in a database. Skill aliases are held in memory and reset on process restart. Unknown-skill counts are stored in `backend/app/knowledge/unknown_skills.json`.
+  ```bash
+  npm run build
+  ```
 
-When Gemini or Cerebras is selected, extracted resume text is sent to that external provider. Use only with appropriate consent and data-handling practices.
+- Backend: start the API and use the interactive docs at `/docs`.
 
-## Known limitations
+## Where things moved (2026-11-10 restructure)
 
-- Parsing and ATS scoring are heuristic and can vary by resume layout and content.
-- Image-only/scanned PDFs are rejected; OCR is not implemented.
-- `auto` selects the local parser; automatic fallback or provider routing is not implemented.
-- Gemini initialization can fail if its SDK is unavailable or configuration is missing; the service does not then fall back to the local parser.
-- The Gemini SDK is not included in the backend dependency manifest.
-- Cerebras model availability, rate limits, and pricing are controlled by Cerebras and may change.
-- Job matching uses token/substring overlap, not semantic matching.
-- Skill alias edits are not persisted; the unknown-skill JSON file is a local file, not a database.
-- No authentication or authorization is implemented for the API.
-- The database design document describes a proposal, not an implemented database.
-- No automated test suite was found in the repository during documentation review; runtime behavior has not been verified by this README update.
+| Before | Now |
+|---|---|
+| `Backend/app/{ats,parser,knowledge,recommendation,validation,services,...}` | `backend/app/modules/resume_engine/` |
+| `Backend/app/api.py` | `backend/app/modules/resumes/analysis_router.py` + `analysis_schemas.py` |
+| `Hire-geni/backend/main.py` | `backend/app/main.py` + `backend/app/modules/*/router.py` |
+| `Hire-geni/backend/{security,auth,db,models,schemas}.py` | `backend/app/core/`, `backend/app/db/`, `backend/app/modules/*/schemas.py` |
+| `Hire-geni/backend/agents/` | `backend/app/modules/resume_engine/agents/` (`orchestrator.py` → `modules/recruiters/suggestions.py`) |
+| `Hire-geni/frontend/` | `frontend/` |
+| `frontend/` (analyzer, React JS) | ported to `frontend/src/modules/job-seeker/resume-analysis/` (the original was removed; it is in git history) |
+| `Hire-geni/docs/` | `docs/legacy/hire-geni/` |
+
+All API paths are unchanged.
 
 ## Documentation
 
-- [Backend setup and development](backend/README.md)
-- [Frontend setup and development](frontend/README.md)
-- [Runbook](docs/RUNBOOK.md)
-- [Architecture](docs/V1_ARCHITECTURE.md)
-- [API and service flow](docs/API_OR_SERVICE_FLOW.md)
-- [Project structure](docs/PROJECT_STRUCTURE.md)
-- [Proposed database design](docs/DATABASE_DESIGN.md)
-- [V1.5 roadmap](docs/V1_5_ROADMAP.md)
+Start at [docs/README.md](docs/README.md). Product rules: [docs/PRD.md](docs/PRD.md) and [docs/ERD.md](docs/ERD.md). Candidate-platform plan and decisions: [docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md](docs/hiregenii/CANDIDATE_PLATFORM_PLAN.md).

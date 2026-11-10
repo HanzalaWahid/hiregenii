@@ -1,80 +1,68 @@
 # Project structure
 
-This tree reflects the current React/Vite frontend and FastAPI backend. Generated dependency directories, virtual environments, caches, and local resume files are omitted.
+The repository now contains one React/Vite frontend and one modular FastAPI
+backend. The resume-analysis and recruiter workflows share the application
+entry points, but retain distinct routes and data flows.
 
 ```text
 .
 ├── .env.example
 ├── README.md
 ├── backend/
-│   ├── .gitignore
-│   ├── README.md
-│   ├── main.py
 │   ├── requirements.txt
+│   ├── data/                       Local SQLite data and analysis artifacts
+│   ├── uploads/                    Local candidate resume uploads
 │   └── app/
-│       ├── __init__.py
-│       ├── api.py
-│       ├── config.py
-│       ├── Courses.py
-│       ├── field_rules.json
-│       ├── models.py
-│       ├── ats/
-│       │   ├── engine.py
-│       │   └── interfaces.py
-│       ├── knowledge/
-│       │   ├── repository.py
-│       │   ├── unknown_skills.json
-│       │   └── __init__.py
-│       ├── parser/
-│       │   ├── custom_parser.py
-│       │   ├── interfaces.py
-│       │   ├── llm_extractor.py
-│       │   └── text_extraction.py
-│       ├── recommendation/
-│       │   ├── engine.py
-│       │   └── interfaces.py
-│       ├── services/
-│       │   └── analysis_service.py
-│       └── validation/
-│           └── validator.py
+│       ├── main.py                 FastAPI app, middleware, health endpoints
+│       ├── api/router.py           Aggregates feature routers
+│       ├── core/                   Configuration, JWT security, dependencies
+│       ├── db/                     SQLAlchemy models, SQLite session, migrations
+│       ├── integrations/           Planned integration boundary
+│       ├── modules/
+│       │   ├── auth/ candidates/ jobs/ applications/ recruiters/
+│       │   ├── interviews/ notifications/ resumes/
+│       │   ├── resume_engine/      Parsing, scoring, recommendations, agents
+│       │   ├── admin/ organizations/  Planned placeholders
+│       └── services/               Access, agents, cache, realtime, extraction
 ├── docs/
-│   ├── API_OR_SERVICE_FLOW.md
-│   ├── DATABASE_DESIGN.md
-│   ├── PROJECT_STRUCTURE.md
-│   ├── RUNBOOK.md
-│   ├── V1_5_ROADMAP.md
-│   └── V1_ARCHITECTURE.md
-└── frontend/
-    ├── .gitignore
-    ├── .oxlintrc.json
-    ├── index.html
-    ├── package.json
-    ├── package-lock.json
-    ├── README.md
-    ├── vite.config.js
-    ├── public/
-    └── src/
-        ├── App.css
-        ├── App.jsx
-        ├── index.css
-        ├── main.jsx
-        ├── assets/
-        ├── components/
-        ├── context/
-        └── utils/
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── src/
+│       ├── app/                    App shell and public pages
+│       ├── components/             Shared UI and UI primitives
+│       ├── layouts/
+│       ├── modules/
+│       │   ├── auth/
+│       │   ├── job-seeker/         Profiles, CV, jobs, resume analysis
+│       │   ├── recruiter/
+│       │   └── shared/
+│       ├── services/               Shared API client
+│       ├── hooks/ types/ utils/
+└── supabase/                       Migration/function placeholders only
 ```
 
 ## Entry points and responsibilities
 
-- `frontend/src/main.jsx` mounts the React application; `frontend/src/App.jsx` selects the dashboard views.
-- `frontend/src/context/ResumeContext.jsx` holds analysis state; `frontend/src/utils/api.js` contains the HTTP client.
-- `frontend/vite.config.js` configures the development server and proxies `/api` and `/health` to port `8000`.
-- `backend/main.py` starts Uvicorn with `app.api:app`; `backend/app/api.py` defines the FastAPI app, schemas, and routes.
-- `backend/app/services/analysis_service.py` orchestrates parser selection, enrichment, normalization, ATS scoring, and recommendations.
-- `backend/app/parser/` contains the local parser, optional Gemini and Cerebras extractors, shared LLM prompt, and document text extraction.
-- `backend/app/validation/validator.py` validates uploaded PDF/DOCX files.
-- `backend/app/knowledge/repository.py` manages in-memory skill aliases and a local unknown-skill count file.
-- `backend/app/ats/engine.py` implements rule-based scoring; `backend/app/recommendation/engine.py` implements keyword-based recommendations.
-- `backend/app/models.py` contains analysis result dataclasses. Response models are declared in `backend/app/api.py`.
+- `frontend/src/main.tsx` mounts the React application; `frontend/src/app/App.tsx`
+  defines public, seeker, and recruiter routes.
+- `frontend/src/services/api.ts` is the shared HTTP client. Resume-analysis
+  requests are grouped in `frontend/src/modules/job-seeker/resume-analysis/api.ts`.
+- `frontend/vite.config.ts` runs the frontend on port `8080`. The API base URL
+  is configured by `VITE_API_BASE_URL`; the frontend config does not define a
+  development proxy.
+- `backend/app/main.py` creates the FastAPI app, database tables, middleware,
+  and health routes. Run it from `backend/` as `uvicorn app.main:app`.
+- `backend/app/api/router.py` includes feature routers from
+  `backend/app/modules/*/router.py`.
+- `backend/app/modules/resumes/analysis_router.py` serves the standalone
+  analyzer API paths. Its pipeline is in
+  `backend/app/modules/resume_engine/`.
+- `backend/app/modules/resumes/router.py` and the other domain routers serve
+  authenticated CV, candidate, job, application, recruiter, interview, and
+  notification workflows.
+- `backend/app/db/` uses local SQLite through SQLAlchemy. Supabase is not
+  integrated; the `supabase/` folders are placeholders.
 
-There is no active database package, ORM, migration directory, or authentication module in this structure. The database design document is a proposal.
+Local databases and uploaded resumes may contain sensitive data. They are
+development artifacts, not disposable application source.

@@ -1,188 +1,261 @@
-:root {
-  /* Colors */
-  --bg-base: #070913;
-  --bg-surface: rgba(15, 20, 39, 0.6);
-  --bg-surface-hover: rgba(22, 28, 54, 0.8);
-  --bg-card: rgba(20, 26, 48, 0.55);
-  
-  --border-color: rgba(255, 255, 255, 0.06);
-  --border-color-hover: rgba(255, 255, 255, 0.12);
-  
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  
-  --color-primary: #8b5cf6;
-  --color-primary-hover: #a78bfa;
-  --color-primary-glow: rgba(139, 92, 246, 0.15);
-  
-  --color-accent: #06b6d4;
-  --color-accent-hover: #22d3ee;
-  --color-accent-glow: rgba(6, 182, 212, 0.15);
-  
-  --color-success: #10b981;
-  --color-success-glow: rgba(16, 185, 129, 0.1);
-  --color-warning: #f59e0b;
-  --color-warning-glow: rgba(245, 158, 11, 0.1);
-  --color-danger: #ef4444;
-  --color-danger-glow: rgba(239, 68, 68, 0.1);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  /* Fonts */
-  --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+/* Bias-Aware Resume Screening System - Academic Design System
+   Colors: Neutral blues, slates, with teal accents
+   Typography: Clean, professional, readable
+*/
 
-  /* Custom Glows */
-  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.15);
-  --glow-purple: 0 0 25px rgba(139, 92, 246, 0.2);
+@layer base {
+  :root {
+    /* Primary: Deep Slate Blue - Professional, Trustworthy */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    /* Cards and elevated surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    /* Popovers */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Primary: Deep Blue - Academic, Professional */
+    --primary: 215 50% 23%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary: Slate Gray */
+    --secondary: 215 15% 94%;
+    --secondary-foreground: 215 25% 25%;
+
+    /* Muted: Light Gray */
+    --muted: 210 15% 96%;
+    --muted-foreground: 215 15% 46%;
+
+    /* Accent: Teal - Positive, Fair */
+    --accent: 175 60% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Success: Teal */
+    --success: 170 55% 42%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning: Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+
+    /* Destructive: Soft Red */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and Inputs */
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 215 50% 40%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar - Slightly darker */
+    --sidebar-background: 215 25% 18%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 175 60% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 25%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 175 60% 50%;
+
+    /* Special tokens for anonymization */
+    --anonymized: 215 30% 92%;
+    --anonymized-foreground: 215 25% 35%;
+    --revealed: 175 50% 95%;
+    --revealed-foreground: 175 60% 25%;
+
+    /* Progress and skill bars */
+    --progress-bg: 215 15% 92%;
+    --progress-fill: 175 55% 42%;
+
+    /* Glassmorphism effects */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 215 20% 90%;
+  }
+
+  .dark {
+    --background: 215 30% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 215 28% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 175 60% 50%;
+    --primary-foreground: 215 30% 10%;
+
+    --secondary: 215 25% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 215 25% 15%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 175 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 170 55% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 175 60% 50%;
+
+    --sidebar-background: 215 30% 6%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 175 60% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 15%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 25% 15%;
+    --sidebar-ring: 175 60% 50%;
+
+    --anonymized: 215 25% 15%;
+    --anonymized-foreground: 215 15% 70%;
+    --revealed: 175 40% 15%;
+    --revealed-foreground: 175 50% 70%;
+
+    --progress-bg: 215 25% 18%;
+    --progress-fill: 175 55% 45%;
+  }
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
-body {
-  font-family: var(--font-ui);
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  min-height: 100vh;
-  overflow-x: hidden;
-  line-height: 1.5;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
-  background-attachment: fixed;
+@layer components {
+
+  /* Academic card style */
+  .card-academic {
+    @apply bg-card rounded-lg border border-border shadow-sm;
+  }
+
+  /* Anonymized content styling */
+  .anonymized-field {
+    @apply bg-anonymized text-anonymized-foreground rounded px-2 py-1 font-mono text-sm;
+  }
+
+  /* Revealed content styling */
+  .revealed-field {
+    @apply bg-revealed text-revealed-foreground rounded px-2 py-1;
+  }
+
+  /* Skill tag */
+  .skill-tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-2 rounded-full bg-progress-bg overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full bg-progress-fill transition-all duration-500;
+  }
+
+  /* Sidebar link active state */
+  .sidebar-link-active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  }
+
+  /* Tooltip academic style */
+  .tooltip-academic {
+    @apply bg-foreground text-background px-3 py-2 rounded-md text-sm shadow-lg max-w-xs;
+  }
+
+  /* Status badge */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-success/10 text-success;
+  }
+
+  .status-badge-warning {
+    @apply bg-warning/10 text-warning;
+  }
+
+  .status-badge-neutral {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* Form field focus */
+  .form-field-focus {
+    @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Gradient text for headings */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@layer utilities {
 
-::-webkit-scrollbar-track {
-  background: var(--bg-base);
-}
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
+  /* Animate fade in */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
 
-/* Glassmorphism Classes */
-.glass-panel {
-  background: var(--bg-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
 
-.glass-panel:hover {
-  border-color: var(--border-color-hover);
-}
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-.glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  transition: all 0.25s ease;
-}
+  /* Subtle hover lift */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
 
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-/* Buttons */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, var(--color-primary), #7c3aed);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
-  background: linear-gradient(135deg, #9333ea, #6d28d9);
-}
-
-.btn-primary:active {
-  transform: translateY(1px);
-}
-
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-color-hover);
-  transform: translateY(-1px);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.1); }
-  50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.3); }
-}
-
-@keyframes drawCirc {
-  from { stroke-dashoffset: 283; }
-  to { stroke-dashoffset: var(--offset, 0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Reset index container */
-#root {
-  display: flex;
-  min-height: 100vh;
-  width: 100vw;
-  max-width: 100%;
+  /* Glass effect */
+  .glass {
+    @apply backdrop-blur-sm bg-glass-bg border border-glass-border;
+  }
 }
